@@ -101,3 +101,23 @@ function graphtemp(t,x)
     grid on;
 
 end
+
+
+function comb = DiracComb(t,Te,dt)
+
+    comb = zeros(size(t));
+
+    tmin = min(t);
+    tmax = max(t);
+
+    kmin = ceil(tmin/Te);
+    kmax = floor(tmax/Te);
+
+    for k = kmin:kmax
+
+        t0 = k*Te;
+
+        comb = comb + Dirac(t,t0,dt);
+    end
+
+end
