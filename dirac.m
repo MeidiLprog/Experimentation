@@ -2,42 +2,62 @@ clc;
 clear;
 close all;
 
-f = 50;
+%% Parameters
 
-Fe = 1000;
-dt = 1/Fe;
+f = 5;              % Frequency of sinusoid
+Fe = 1000;          % Numerical sampling frequency
+dt = 1/Fe;          % Numerical time step
 
 t = 0:dt:1;
 
 A = 3;
 
-%% Sinusoide
+
+%% Sinusoid
 
 x = Sinusoide(f,t,A);
 
-graphtemp(t,x);
+graphtemp(t,x,"Original sinusoid");
 
 
-%% Dirac
+%% Simple Dirac
 
 t0 = 1/4;
 
 delta = Dirac(t,t0,dt);
 
-graphtemp(t,delta);
+graphtemp(t,delta,"Dirac");
 
 
 %% Convolution : x(t) * delta(t-t0)
 
 y = Convolution(x,delta,dt);
 
-% Une convolution de deux signaux de longueur N
-% produit un signal de longueur 2N-1.
-% Il faut donc construire son nouvel axe temporel.
-
+% Length of convolution:
+% Nx + Nh - 1
 ty = 0:dt:(length(y)-1)*dt;
 
-graphtemp(ty,y);
+graphtemp(ty,y,"Convolution x(t) * delta(t-t0)");
+
+
+%% Dirac Comb
+
+Te = 0.05;           % Distance between two Dirac impulses
+Fe_sample = 1/Te;    % Sampling frequency of the comb
+
+comb = DiracComb(t,Te,dt);
+
+graphtemp(t,comb,"Dirac comb");
+
+
+%% Ideal sampling : x(t) * Dirac Comb
+% Here .* means PRODUCT, not convolution
+
+xSampled = x .* comb;
+
+graphtemp(t,xSampled,"Sampled signal");
+
+disp("Sampling frequency of the Dirac comb = " + Fe_sample + " Hz");
 
 
 %% FUNCTIONS
@@ -56,6 +76,27 @@ function delta = Dirac(t,t0,dt)
     index = (t == t0);
 
     delta(index) = 1/dt;
+
+end
+
+
+function comb = DiracComb(t,Te,dt)
+
+    comb = zeros(size(t));
+
+    tmin = min(t);
+    tmax = max(t);
+
+    kmin = ceil(tmin/Te);
+    kmax = floor(tmax/Te);
+
+    for k = kmin:kmax
+
+        t0 = k*Te;
+
+        comb = comb + Dirac(t,t0,dt);
+
+    end
 
 end
 
@@ -88,36 +129,16 @@ function y = Convolution(x,h,dt)
 end
 
 
-function graphtemp(t,x)
+function graphtemp(t,x,titleText)
 
     figure;
 
     plot(t,x,'LineWidth',1.5);
 
-    xlabel("time(s)");
+    xlabel("Time (s)");
     ylabel("Amplitude");
-    title("Displaying in temporal domain");
+    title(titleText);
 
     grid on;
-
-end
-
-
-function comb = DiracComb(t,Te,dt)
-
-    comb = zeros(size(t));
-
-    tmin = min(t);
-    tmax = max(t);
-
-    kmin = ceil(tmin/Te);
-    kmax = floor(tmax/Te);
-
-    for k = kmin:kmax
-
-        t0 = k*Te;
-
-        comb = comb + Dirac(t,t0,dt);
-    end
 
 end
